@@ -1,64 +1,102 @@
-# How to Build the Restaurant Menu Manager — Step by Step
+# How to Build the Restaurant Menu Manager — Complete Step-by-Step Guide
 
-This guide walks you through building this project from scratch, explaining every file,
-every section of code, and why each decision was made. Written for someone early in their
-CS degree who is comfortable with basic Python but new to web apps.
-
----
-
-## What We're Building
-
-A web application that lets you manage a restaurant's menu in a browser. You can:
-- See all menu items in a table
-- Add, edit, and delete items
-- Mark items as available or unavailable
-- View a report summarizing the menu
+This guide walks you through building this entire project from scratch on macOS.
+Every terminal command, every file, and every line of code is explained in plain English.
 
 ---
 
-## The Tech Stack (and Why)
+## What You Are Building
 
-| Tool | What it does | Why we use it |
-|------|-------------|---------------|
-| **Python** | Programming language | You already know it |
-| **Flask** | Web framework | Lightweight, beginner-friendly, runs a local web server |
-| **SQLite** | Database | Built into Python, no server setup needed, perfect for small apps |
-| **Jinja2** | HTML templating | Comes with Flask, lets you put Python variables inside HTML |
-| **pytest** | Testing framework | Standard Python testing tool |
+A web application that runs in your browser and lets you manage a restaurant menu.
+You can view, add, edit, and delete menu items, toggle whether they are available,
+and generate a summary report. It uses a real database to store everything.
 
 ---
 
-## Prerequisites
+## The Tools You Will Use
 
-Before starting, make sure you have:
-- Python 3.9 or newer installed (`python3 --version` to check)
-- A terminal (Terminal on Mac, Command Prompt or PowerShell on Windows)
-- A code editor (VS Code recommended)
-- Git installed (`git --version` to check)
-- A GitHub account
+| Tool | What it is | Why |
+|------|-----------|-----|
+| Python 3 | Programming language | You already know it |
+| Flask | Web framework | Turns Python into a web server |
+| SQLite | Database | Built into Python, no setup needed |
+| Jinja2 | HTML templating | Comes with Flask, lets HTML display Python data |
+| pytest | Testing framework | Standard Python testing tool |
+| Git | Version control | Tracks your changes |
+| GitHub CLI (`gh`) | GitHub from the terminal | Creates and pushes repos without the browser |
+
+---
+
+## Before You Start — Check Your Setup
+
+Open **Terminal** (press `Cmd + Space`, type `Terminal`, press Enter).
+
+Run each of these to confirm they are installed:
+
+```bash
+python3 --version
+```
+You should see something like `Python 3.9.6` or newer. If you get `command not found`,
+download Python from https://www.python.org/downloads/
+
+```bash
+git --version
+```
+You should see `git version 2.x.x`. Git comes with macOS developer tools. If missing,
+run `xcode-select --install` and follow the prompts.
+
+```bash
+gh --version
+```
+You should see `gh version 2.x.x`. If missing, install it with:
+```bash
+brew install gh
+```
+If you don't have Homebrew either, install it first:
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
 
 ---
 
 ## Step 1 — Create the Project Folder
 
-Open your terminal and run:
+In Terminal, run these commands one at a time. Press Enter after each one.
+
+```bash
+cd ~/Desktop
+```
+This moves you to your Desktop. You can use any folder you want — this is just easy to find.
 
 ```bash
 mkdir restaurant-menu
+```
+`mkdir` means "make directory." This creates a new folder called `restaurant-menu`.
+
+```bash
 cd restaurant-menu
+```
+Moves you inside the folder you just created. All commands from here on run inside this folder.
+
+```bash
 mkdir templates
 mkdir -p static/css
 mkdir tests
 ```
+- `mkdir templates` — Flask automatically looks in a folder called `templates` for your HTML files. The name must be exactly this.
+- `mkdir -p static/css` — Flask looks in `static/` for CSS, images, and other files. The `-p` flag creates both `static/` and `css/` inside it at the same time.
+- `mkdir tests` — Where your test files will live.
 
-**What this does:**
-- `mkdir restaurant-menu` — creates the project folder
-- `cd restaurant-menu` — moves into it
-- `mkdir templates` — Flask looks here for your HTML files
-- `mkdir -p static/css` — Flask looks here for CSS, images, etc. The `-p` flag creates both `static/` and `css/` at once
-- `mkdir tests` — where your test files go
+**Verify it worked:**
+```bash
+ls
+```
+`ls` lists the contents of the current folder. You should see:
+```
+static   templates   tests
+```
 
-Your folder should now look like this:
+Your folder structure now looks like this:
 ```
 restaurant-menu/
 ├── templates/
@@ -71,58 +109,96 @@ restaurant-menu/
 
 ## Step 2 — Set Up a Virtual Environment
 
-A virtual environment is an isolated box for your Python packages. It keeps this project's
-dependencies separate from everything else on your computer.
+A virtual environment is an isolated container for your Python packages. It keeps this
+project's packages completely separate from every other Python project on your computer.
+This prevents version conflicts and is standard practice for every Python project.
 
 ```bash
 python3 -m venv venv
+```
+- `python3 -m venv` — runs Python's built-in virtual environment tool
+- The last `venv` is the name of the folder it creates. Convention is to call it `venv`.
+
+```bash
 source venv/bin/activate
 ```
-
-On Windows:
-```bash
-python -m venv venv
-venv\Scripts\activate
+This activates the virtual environment. After running this, your terminal prompt will
+change to show `(venv)` at the start, like this:
 ```
+(venv) harrisonsmith@Harrisons-Mac restaurant-menu %
+```
+That `(venv)` prefix tells you the virtual environment is active. Any Python packages
+you install now go into `venv/` and nowhere else.
 
-You'll know it worked when you see `(venv)` at the start of your terminal prompt.
+**Important:** You need to run `source venv/bin/activate` every time you open a new
+Terminal window to work on this project.
 
-**Why this matters:** Without a virtual environment, every Python project on your computer
-shares the same packages. That causes version conflicts. Always use one per project.
+To deactivate it when you're done:
+```bash
+deactivate
+```
 
 ---
 
-## Step 3 — Install Dependencies
+## Step 3 — Create requirements.txt and Install Packages
 
-Create a file called `requirements.txt` in your project root:
+Create the file:
+```bash
+touch requirements.txt
+```
+`touch` creates an empty file.
 
+Now open it in a text editor. If you have VS Code:
+```bash
+code requirements.txt
+```
+Or open it with the built-in TextEdit:
+```bash
+open -e requirements.txt
+```
+
+Add these two lines exactly:
 ```
 Flask==3.0.3
 pytest==8.3.2
 ```
 
-Then install them:
-
+Save and close. Then install them:
 ```bash
 pip install -r requirements.txt
 ```
+- `pip` is Python's package installer
+- `-r requirements.txt` means "install everything listed in this file"
+- `==3.0.3` pins the exact version so anyone who clones your project gets the same version
 
-**What each package does:**
-- `Flask` — the web framework that handles URLs, requests, and responses
-- `pytest` — the testing framework we'll use later
+You will see output like `Successfully installed Flask-3.0.3 ...`
 
-**Why pin exact versions?** Writing `Flask==3.0.3` instead of just `Flask` means anyone
-who clones your project gets the exact same version you used. This prevents "it works on
-my machine" problems.
+**Verify it worked:**
+```bash
+pip list
+```
+You should see Flask and pytest in the list.
+
 
 ---
 
-## Step 4 — Create the Database File (`database.py`)
+## Step 4 — Create database.py
 
-Create `database.py` in the project root. This file handles everything related to the
-database — connecting to it and setting it up.
+This file handles everything related to the database: connecting to it and building it.
+
+In Terminal:
+```bash
+touch database.py
+code database.py
+```
+
+Type or paste the full file contents:
 
 ```python
+"""
+database.py - Database initialization and connection helpers for Restaurant Menu Manager.
+"""
+
 import sqlite3
 import os
 
@@ -130,15 +206,18 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "menu.db")
 
 
 def get_connection():
+    """Return a connection to the SQLite database."""
     conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    conn.row_factory = sqlite3.Row  # allows dict-style access on rows
     return conn
 
 
 def init_db():
+    """Create tables and seed sample data if the database is empty."""
     conn = get_connection()
     cursor = conn.cursor()
 
+    # Create menu_items table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS menu_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -150,15 +229,22 @@ def init_db():
         )
     """)
 
+    # Seed sample data only if table is empty
     cursor.execute("SELECT COUNT(*) FROM menu_items")
     count = cursor.fetchone()[0]
 
     if count == 0:
         sample_items = [
             ("Mozzarella Sticks", "Appetizer", "Fried mozzarella with marinara sauce", 8.99, 1),
+            ("Caesar Salad", "Appetizer", "Romaine, croutons, parmesan, caesar dressing", 9.49, 1),
             ("Cheeseburger", "Main", "8oz beef patty with cheddar, lettuce, tomato", 13.99, 1),
+            ("Grilled Salmon", "Main", "Atlantic salmon with lemon butter and vegetables", 18.99, 1),
+            ("Margherita Pizza", "Main", "Fresh tomato, mozzarella, and basil", 14.99, 1),
+            ("Pasta Carbonara", "Main", "Spaghetti with pancetta, egg, and parmesan", 15.49, 0),
             ("Chocolate Lava Cake", "Dessert", "Warm chocolate cake with vanilla ice cream", 7.99, 1),
+            ("Cheesecake", "Dessert", "New York style with strawberry topping", 6.99, 1),
             ("Lemonade", "Drink", "Fresh squeezed lemonade", 3.49, 1),
+            ("Iced Tea", "Drink", "House-brewed sweet or unsweet", 2.99, 1),
         ]
         cursor.executemany(
             "INSERT INTO menu_items (name, category, description, price, available) VALUES (?, ?, ?, ?, ?)",
@@ -167,57 +253,154 @@ def init_db():
 
     conn.commit()
     conn.close()
+
+
+if __name__ == "__main__":
+    init_db()
+    print("Database initialized successfully.")
 ```
 
-### Breaking it down:
+Save the file.
 
-**`DB_PATH`**
+### What every part does
+
+**The imports at the top:**
 ```python
-DB_PATH = os.path.join(os.path.dirname(__file__), "menu.db")
+import sqlite3
+import os
 ```
-This builds an absolute path to `menu.db` in the same folder as `database.py`.
-`__file__` is Python's built-in variable that holds the current file's path.
-`os.path.dirname()` gets just the folder part of that path.
-`os.path.join()` combines them cleanly, whether you're on Mac, Windows, or Linux.
-
-**`get_connection()`**
-```python
-conn = sqlite3.connect(DB_PATH)
-conn.row_factory = sqlite3.Row
-return conn
-```
-`sqlite3.connect()` opens the database file (or creates it if it doesn't exist).
-`conn.row_factory = sqlite3.Row` is important — without it, database rows come back as
-plain tuples and you'd access data by index like `row[0]`. With it, you can access data
-by column name like `row["name"]`, which is much more readable.
-
-**`init_db()`**
-The `CREATE TABLE IF NOT EXISTS` line creates the table only if it doesn't already exist.
-This means you can safely call `init_db()` every time the app starts without destroying
-your data.
-
-The `?` placeholders in the INSERT statement are parameterized queries. This is a security
-practice — never put variables directly into SQL strings, or you open yourself up to
-SQL injection attacks.
-
-**The table columns:**
-- `id` — auto-incremented unique number for each row
-- `name` — the item's name (required)
-- `category` — Appetizer, Main, Dessert, or Drink (required)
-- `description` — optional description
-- `price` — stored as `REAL` (a decimal number)
-- `available` — stored as `INTEGER` (0 = unavailable, 1 = available). SQLite has no
-  true boolean type, so we use 0 and 1.
+- `sqlite3` — Python's built-in library for working with SQLite databases. No install needed.
+- `os` — Python's built-in library for working with files and folder paths.
 
 ---
 
-## Step 5 — Create the Flask App (`app.py`)
+**The database path:**
+```python
+DB_PATH = os.path.join(os.path.dirname(__file__), "menu.db")
+```
+This builds the full file path to where the database file will be saved.
 
-This is the heart of the project. Create `app.py` in the project root.
+Breaking it down piece by piece:
+- `__file__` — a Python built-in that holds the path of the current file, e.g. `/Users/harrisonsmith/Desktop/restaurant-menu/database.py`
+- `os.path.dirname(__file__)` — strips the filename off the end, leaving just the folder: `/Users/harrisonsmith/Desktop/restaurant-menu/`
+- `os.path.join(..., "menu.db")` — joins the folder path with `menu.db` to get the full path: `/Users/harrisonsmith/Desktop/restaurant-menu/menu.db`
 
-### 5a — App Setup
+Why not just write `"menu.db"` directly? Because depending on which folder Terminal is in
+when you run the app, a plain filename might resolve to the wrong location. Using the
+absolute path based on `__file__` always works correctly no matter where you run from.
+
+---
+
+**get_connection():**
+```python
+def get_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+```
+This function opens a connection to the database and returns it.
+
+- `sqlite3.connect(DB_PATH)` — opens the `.db` file. If the file doesn't exist yet, SQLite creates it automatically.
+- `conn.row_factory = sqlite3.Row` — this is important. Without it, when you fetch rows from the database they come back as plain tuples. You'd have to access data by index: `row[0]`, `row[1]`, etc. With `sqlite3.Row`, you can access data by column name: `row["name"]`, `row["price"]`. Much more readable.
+
+Every route in `app.py` calls `get_connection()` when it needs to talk to the database.
+
+---
+
+**init_db():**
+```python
+def init_db():
+    conn = get_connection()
+    cursor = conn.cursor()
+```
+Opens a connection and creates a cursor. A cursor is the object you use to actually
+run SQL commands.
 
 ```python
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS menu_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            category TEXT NOT NULL,
+            description TEXT,
+            price REAL NOT NULL,
+            available INTEGER NOT NULL DEFAULT 1
+        )
+    """)
+```
+This creates the database table. `CREATE TABLE IF NOT EXISTS` means it only creates the
+table if it doesn't already exist — so you can safely run this every time the app starts
+without wiping out your data.
+
+The columns explained:
+- `id INTEGER PRIMARY KEY AUTOINCREMENT` — a unique number that automatically counts up for each new row. You never set this yourself.
+- `name TEXT NOT NULL` — the item name. `NOT NULL` means this field is required — SQLite will reject the row if it's missing.
+- `category TEXT NOT NULL` — Appetizer, Main, Dessert, or Drink. Also required.
+- `description TEXT` — no `NOT NULL`, so this is optional.
+- `price REAL NOT NULL` — `REAL` is SQLite's type for decimal numbers (like 9.99).
+- `available INTEGER NOT NULL DEFAULT 1` — SQLite has no true boolean type, so we use integers: `1` = available, `0` = unavailable. `DEFAULT 1` means new items are available unless you say otherwise.
+
+```python
+    cursor.execute("SELECT COUNT(*) FROM menu_items")
+    count = cursor.fetchone()[0]
+
+    if count == 0:
+        cursor.executemany(
+            "INSERT INTO menu_items (...) VALUES (?, ?, ?, ?, ?)",
+            sample_items
+        )
+```
+After creating the table, this checks if it's empty. If it is, it inserts the sample
+data so the app has something to show on first run.
+
+The `?` placeholders are called a parameterized query. This is a security requirement —
+never put variables directly into an SQL string using string formatting like `f"INSERT INTO ... VALUES ({name})"`.
+That opens your app to SQL injection attacks where someone types SQL code into a form field
+and damages or reads your database. The `?` approach passes values separately so the database
+treats them as data only, never as SQL commands.
+
+```python
+    conn.commit()
+    conn.close()
+```
+- `conn.commit()` — saves all the changes. Without this, the inserts are not actually written to disk.
+- `conn.close()` — closes the connection and frees up the resource.
+
+---
+
+**Test it works:**
+```bash
+python database.py
+```
+You should see: `Database initialized successfully.`
+
+Then check the file was created:
+```bash
+ls
+```
+You should now see `menu.db` in the folder.
+
+
+---
+
+## Step 5 — Create app.py
+
+This is the main file. It creates the web server and defines every URL the app responds to.
+
+```bash
+touch app.py
+code app.py
+```
+
+### 5a — Imports and App Setup
+
+At the very top of `app.py`:
+
+```python
+"""
+app.py - Main Flask application for Restaurant Menu Manager.
+"""
+
 import logging
 from flask import Flask, render_template, request, redirect, url_for, flash
 from database import get_connection, init_db
@@ -234,19 +417,41 @@ logger = logging.getLogger(__name__)
 CATEGORIES = ["Appetizer", "Main", "Dessert", "Drink"]
 ```
 
-**`Flask(__name__)`** — Creates the Flask app. `__name__` tells Flask where to look for
-templates and static files relative to this file.
+**Line by line:**
 
-**`app.secret_key`** — Required for flash messages (the little success/error banners).
-Flask uses this to sign the session cookie. In a real production app you'd load this from
-an environment variable, not hardcode it.
+`import logging` — Python's built-in logging library. Better than print statements
+because log lines include a timestamp and severity level.
 
-**`logging.basicConfig()`** — Sets up Python's built-in logger so every log line includes
-a timestamp and the log level (INFO, ERROR, etc.). This is how you see what the app is
-doing without adding print statements everywhere.
+`from flask import Flask, render_template, request, redirect, url_for, flash` — imports
+the specific Flask tools we need:
+- `Flask` — the class that creates the app
+- `render_template` — loads an HTML file and fills in variables
+- `request` — lets you read incoming data (form inputs, URL parameters)
+- `redirect` — sends the user to a different URL
+- `url_for` — generates a URL from a function name
+- `flash` — stores a one-time message (like "Item saved!") to show on the next page
 
-**`CATEGORIES`** — A list defined once at the top so you never have to type it out in
-multiple places. If you add a category later, you change it in one spot.
+`from database import get_connection, init_db` — pulls in the two functions from the
+`database.py` file you just created.
+
+`app = Flask(__name__)` — creates the Flask application object. `__name__` is a Python
+built-in that equals the current module's name. Flask uses it to figure out where to
+look for your `templates/` and `static/` folders — they need to be in the same directory
+as the file where `Flask(__name__)` is called.
+
+`app.secret_key = "restaurant-menu-secret-key"` — Flask needs a secret key to sign
+the session cookie that stores flash messages. This can be any string. In a real
+production app you would load this from an environment variable, not hardcode it.
+
+`logging.basicConfig(...)` — configures the logger so every log line looks like:
+`2026-08-17 11:00:00,000 [INFO] Loaded 10 menu items`
+
+`logger = logging.getLogger(__name__)` — creates a logger named after this file.
+You use it throughout the file with `logger.info(...)` and `logger.error(...)`.
+
+`CATEGORIES = ["Appetizer", "Main", "Dessert", "Drink"]` — defined once at the top
+so you never type this list more than once. Every route and template that needs it
+references this one variable. If you add a category later, you change it in one place.
 
 ---
 
@@ -255,6 +460,7 @@ multiple places. If you add a category later, you change it in one spot.
 ```python
 @app.route("/")
 def index():
+    """Display all menu items, optionally filtered by category."""
     category_filter = request.args.get("category", "")
     try:
         conn = get_connection()
@@ -274,24 +480,49 @@ def index():
         flash("Error loading menu items.", "danger")
         items = []
 
-    return render_template("index.html", items=items, categories=CATEGORIES,
-                           selected_category=category_filter)
+    return render_template(
+        "index.html",
+        items=items,
+        categories=CATEGORIES,
+        selected_category=category_filter
+    )
 ```
 
-**`@app.route("/")`** — This decorator tells Flask: "when someone visits the homepage,
-run the `index()` function below."
+**`@app.route("/")`** — This is a decorator. It tells Flask: "when someone visits the
+URL `/`, run the function directly below this line." The `/` is the homepage.
 
-**`request.args.get("category", "")`** — `request.args` contains URL query parameters.
-If the URL is `/?category=Main`, this gets `"Main"`. The `""` is the default if no
-category is in the URL.
+**`def index():`** — the function that runs when the homepage is visited.
 
-**`try/except`** — Any database error is caught, logged, and a friendly message is shown
-to the user instead of a crash page. The `items = []` fallback means the page still
-renders, just empty.
+**`request.args.get("category", "")`** — `request.args` is a dictionary of URL query
+parameters. If the browser visits `/?category=Main`, then `request.args.get("category")`
+returns `"Main"`. The `""` is the default if no `category` parameter is in the URL.
+This is how the filter buttons at the top of the page work — clicking "Main" navigates
+to `/?category=Main`, and this line reads that value.
 
-**`render_template()`** — Tells Flask to find `templates/index.html` and fill in the
-variables you're passing. `items=items` makes the Python `items` list available inside
-the HTML as `{{ items }}`.
+**`try: ... except Exception as e:`** — Every database call is wrapped in try/except.
+If something goes wrong (database file corrupted, disk full, etc.), the error is caught,
+logged, and a friendly message is shown to the user instead of a crash. `items = []` in
+the except block means the page still renders — just empty — instead of showing a
+Python error page.
+
+**`conn.execute(...).fetchall()`** — runs the SQL query and returns all matching rows
+as a list. `fetchall()` returns every row. If you only wanted one row you would use
+`fetchone()`.
+
+**`"SELECT * FROM menu_items WHERE category = ? ORDER BY category, name"`** — this SQL
+reads as: "get all columns from the menu_items table, but only rows where the category
+column matches the value I'm about to provide, and sort the results by category then
+by name alphabetically." The `?` is filled in by the `(category_filter,)` tuple that
+follows. Note the trailing comma — `(category_filter,)` is a tuple with one item.
+Without the comma, Python would treat it as just parentheses around a string, not a tuple,
+and SQLite would reject it.
+
+**`render_template("index.html", items=items, categories=CATEGORIES, selected_category=category_filter)`**
+— loads `templates/index.html` and makes these Python variables available inside the
+HTML file:
+- `items` — the list of database rows
+- `categories` — the list of category names for the filter buttons
+- `selected_category` — which category is currently filtered (so the active button can be highlighted)
 
 ---
 
@@ -300,6 +531,7 @@ the HTML as `{{ items }}`.
 ```python
 @app.route("/add", methods=["GET", "POST"])
 def add_item():
+    """Add a new menu item."""
     if request.method == "POST":
         name = request.form.get("name", "").strip()
         category = request.form.get("category", "").strip()
@@ -324,106 +556,244 @@ def add_item():
                 flash(error, "danger")
             return render_template("add.html", categories=CATEGORIES, form_data=request.form)
 
-        conn = get_connection()
-        conn.execute(
-            "INSERT INTO menu_items (name, category, description, price, available) VALUES (?, ?, ?, ?, ?)",
-            (name, category, description, price, available)
-        )
-        conn.commit()
-        conn.close()
-        flash(f"'{name}' added successfully!", "success")
-        return redirect(url_for("index"))
+        try:
+            conn = get_connection()
+            conn.execute(
+                "INSERT INTO menu_items (name, category, description, price, available) VALUES (?, ?, ?, ?, ?)",
+                (name, category, description, price, available)
+            )
+            conn.commit()
+            conn.close()
+            logger.info("Added menu item: %s (%s) $%.2f", name, category, price)
+            flash(f"'{name}' added successfully!", "success")
+            return redirect(url_for("index"))
+        except Exception as e:
+            logger.error("Failed to add item: %s", e)
+            flash("Error adding item. Please try again.", "danger")
 
     return render_template("add.html", categories=CATEGORIES, form_data={})
 ```
 
-**`methods=["GET", "POST"]`** — By default Flask routes only accept GET requests. You
-have to explicitly allow POST for form submissions.
+**`methods=["GET", "POST"]`** — by default, Flask routes only accept GET requests (when
+a browser visits a URL normally). You have to explicitly list POST to allow form submissions.
+This one route handles two situations using the same URL `/add`.
 
-**`if request.method == "POST"`** — The same URL handles two situations:
-- GET: show the empty form
-- POST: process the submitted form data
+**`if request.method == "POST":`** — when the user submits the form, the browser sends
+a POST request. When the user first visits the page, it's a GET request. This `if` block
+only runs on form submission.
 
-**`.strip()`** — Removes accidental leading/trailing spaces from user input.
+**`request.form.get("name", "").strip()`** — `request.form` is a dictionary of the form
+fields the user submitted. `.strip()` removes any accidental spaces the user may have
+typed at the start or end.
 
-**`available = 1 if request.form.get("available") else 0`** — Checkboxes in HTML only
-appear in form data when checked. If the checkbox is unchecked, `request.form.get("available")`
-returns `None`, so this becomes `0`. If checked, it returns `"on"`, which is truthy, so
-this becomes `1`.
+**`available = 1 if request.form.get("available") else 0`** — HTML checkboxes work
+differently from text inputs. If a checkbox is checked, the browser includes it in the
+form data with the value `"on"`. If it is unchecked, the browser sends nothing at all
+for that field. So `request.form.get("available")` returns `"on"` (truthy) when checked
+and `None` (falsy) when unchecked. This one-liner converts that to `1` or `0` for the
+database.
 
-**Validation** — Before touching the database, we check that the data makes sense.
-This prevents garbage data from getting saved and protects against basic misuse.
+**The validation block** — before touching the database, we verify the data makes sense:
+- name can't be empty
+- category must be one of our four valid options (not just anything the user types)
+- price must be a number and must not be negative
 
-**`redirect(url_for("index"))`** — After successfully saving, we redirect the user back
-to the homepage. `url_for("index")` generates the URL for the `index` function, which is `"/"`.
-This is better than hardcoding `"/"` because if you ever change the route, it updates automatically.
+If any check fails, `flash()` stores an error message and we re-render the form. Passing
+`form_data=request.form` back to the template lets the form re-fill itself with what the
+user already typed — so they don't have to retype everything just because the price was wrong.
 
----
+**`redirect(url_for("index"))`** — after a successful save, send the user back to the
+homepage. `url_for("index")` generates the URL `"/"` by looking up the function named
+`index`. Using `url_for` instead of hardcoding `"/"` means if you ever change the route,
+the redirect updates automatically.
 
-### 5d — Edit, Delete, and Toggle Routes
-
-These follow the same pattern as Add. Key points:
-
-**Edit** (`/edit/<int:item_id>`):
-- The `<int:item_id>` in the route is a URL variable. Flask automatically extracts the
-  number from the URL and passes it to the function.
-- On GET: load the item from the database, pre-fill the form with its current values
-- On POST: validate, then run `UPDATE` SQL
-
-**Delete** (`/delete/<int:item_id>`):
-- Only accepts POST (you don't want someone able to delete items just by visiting a URL)
-- Runs `DELETE FROM menu_items WHERE id = ?`
-- Redirects back to the homepage
-
-**Toggle** (`/toggle/<int:item_id>`):
-- Reads the current `available` value
-- Flips it: `new_status = 0 if item["available"] else 1`
-- Runs `UPDATE` to save the new value
+**The last line runs on GET requests** — when the user first visits `/add`, `request.method`
+is `"GET"` so the `if` block is skipped entirely, and we just render the empty form.
+`form_data={}` provides an empty dict so the template doesn't crash trying to look up
+previous values.
 
 ---
 
-### 5e — The Report Route
+### 5d — The Edit Route
+
+```python
+@app.route("/edit/<int:item_id>", methods=["GET", "POST"])
+def edit_item(item_id):
+    """Edit an existing menu item."""
+    try:
+        conn = get_connection()
+        item = conn.execute("SELECT * FROM menu_items WHERE id = ?", (item_id,)).fetchone()
+        conn.close()
+    except Exception as e:
+        logger.error("Failed to load item %d: %s", item_id, e)
+        flash("Error loading item.", "danger")
+        return redirect(url_for("index"))
+
+    if item is None:
+        flash("Item not found.", "danger")
+        return redirect(url_for("index"))
+
+    if request.method == "POST":
+        # ... same validation as add_item ...
+        conn.execute(
+            "UPDATE menu_items SET name=?, category=?, description=?, price=?, available=? WHERE id=?",
+            (name, category, description, price, available, item_id)
+        )
+        conn.commit()
+        conn.close()
+        flash(f"'{name}' updated successfully!", "success")
+        return redirect(url_for("index"))
+
+    return render_template("edit.html", item=item, categories=CATEGORIES)
+```
+
+**`/edit/<int:item_id>`** — the `<int:item_id>` part is a URL variable. When someone
+visits `/edit/3`, Flask automatically extracts the `3`, converts it to an integer, and
+passes it into the function as `item_id`. The `int:` prefix tells Flask to only match
+URLs where that segment is an integer — so `/edit/abc` would return a 404 error.
+
+**`fetchone()`** — returns a single row instead of a list. If no row matches the id,
+it returns `None`. The `if item is None:` check handles that case gracefully.
+
+The rest follows the same GET/POST pattern as the add route, except the SQL command
+is `UPDATE` instead of `INSERT`.
+
+---
+
+### 5e — The Delete Route
+
+```python
+@app.route("/delete/<int:item_id>", methods=["POST"])
+def delete_item(item_id):
+    """Delete a menu item by ID."""
+    try:
+        conn = get_connection()
+        item = conn.execute("SELECT name FROM menu_items WHERE id = ?", (item_id,)).fetchone()
+        if item:
+            conn.execute("DELETE FROM menu_items WHERE id = ?", (item_id,))
+            conn.commit()
+            flash(f"'{item['name']}' deleted.", "success")
+        else:
+            flash("Item not found.", "danger")
+        conn.close()
+    except Exception as e:
+        logger.error("Failed to delete item %d: %s", item_id, e)
+        flash("Error deleting item.", "danger")
+
+    return redirect(url_for("index"))
+```
+
+**`methods=["POST"]` only** — this route only accepts POST requests, never GET.
+This is intentional. If it accepted GET, someone could delete items just by visiting
+a URL — or a browser could accidentally delete items when pre-fetching links. Delete
+actions must be triggered by a form submission.
+
+We look up the item first to get its name for the confirmation message. Then we run
+`DELETE FROM menu_items WHERE id = ?`. After deleting, we always redirect back to the
+homepage.
+
+---
+
+### 5f — The Toggle Route
+
+```python
+@app.route("/toggle/<int:item_id>", methods=["POST"])
+def toggle_availability(item_id):
+    """Toggle a menu item's availability between available and unavailable."""
+    try:
+        conn = get_connection()
+        item = conn.execute("SELECT name, available FROM menu_items WHERE id = ?", (item_id,)).fetchone()
+        if item:
+            new_status = 0 if item["available"] else 1
+            conn.execute("UPDATE menu_items SET available = ? WHERE id = ?", (new_status, item_id))
+            conn.commit()
+            status_label = "available" if new_status else "unavailable"
+            flash(f"'{item['name']}' marked as {status_label}.", "success")
+        else:
+            flash("Item not found.", "danger")
+        conn.close()
+    except Exception as e:
+        logger.error("Failed to toggle item %d: %s", item_id, e)
+        flash("Error updating availability.", "danger")
+
+    return redirect(url_for("index"))
+```
+
+**`new_status = 0 if item["available"] else 1`** — reads the current value and flips it.
+If it's currently `1` (available), `new_status` becomes `0`. If it's `0`, `new_status`
+becomes `1`. This is the toggle logic in one line.
+
+---
+
+### 5g — The Report Route
 
 ```python
 @app.route("/report")
 def report():
-    conn = get_connection()
-    all_items = conn.execute("SELECT * FROM menu_items ORDER BY category, name").fetchall()
+    """Generate a summary report of the menu."""
+    try:
+        conn = get_connection()
+        all_items = conn.execute("SELECT * FROM menu_items ORDER BY category, name").fetchall()
 
-    report_data = {}
-    for item in all_items:
-        cat = item["category"]
-        if cat not in report_data:
-            report_data[cat] = {"menu_items": [], "total": 0, "available": 0}
-        report_data[cat]["menu_items"].append(item)
-        report_data[cat]["total"] += 1
-        if item["available"]:
-            report_data[cat]["available"] += 1
+        report_data = {}
+        for item in all_items:
+            cat = item["category"]
+            if cat not in report_data:
+                report_data[cat] = {"menu_items": [], "total": 0, "available": 0}
+            report_data[cat]["menu_items"].append(item)
+            report_data[cat]["total"] += 1
+            if item["available"]:
+                report_data[cat]["available"] += 1
 
-    total_items = len(all_items)
-    total_available = sum(1 for i in all_items if i["available"])
-    prices = [i["price"] for i in all_items]
-    avg_price = sum(prices) / len(prices) if prices else 0
-    min_price = min(prices) if prices else 0
-    max_price = max(prices) if prices else 0
-    conn.close()
+        total_items = len(all_items)
+        total_available = sum(1 for i in all_items if i["available"])
+        prices = [i["price"] for i in all_items]
+        avg_price = sum(prices) / len(prices) if prices else 0
+        min_price = min(prices) if prices else 0
+        max_price = max(prices) if prices else 0
+
+        conn.close()
+    except Exception as e:
+        logger.error("Failed to generate report: %s", e)
+        flash("Error generating report.", "danger")
+        return redirect(url_for("index"))
 
     return render_template("report.html", report_data=report_data,
                            total_items=total_items, total_available=total_available,
                            avg_price=avg_price, min_price=min_price, max_price=max_price)
 ```
 
-This route fetches all items and builds a summary in Python before sending it to the
-template. The `report_data` dictionary groups items by category so the template can
-loop through them easily.
+This route does the number-crunching in Python before passing the results to the template.
 
-**`sum(1 for i in all_items if i["available"])`** — This is a generator expression.
-It counts how many items have `available == 1`. It's the same as writing a for loop
-that increments a counter, just more concise.
+**Building `report_data`:** the loop groups every item by category into a dictionary.
+After the loop, `report_data` looks like:
+```python
+{
+    "Appetizer": {"menu_items": [...], "total": 2, "available": 2},
+    "Main":      {"menu_items": [...], "total": 5, "available": 4},
+    ...
+}
+```
+The template then loops over this structure to display a table per category.
+
+**`sum(1 for i in all_items if i["available"])`** — this is a generator expression. It
+is the same as writing:
+```python
+count = 0
+for i in all_items:
+    if i["available"]:
+        count += 1
+```
+Just written in one line. It counts how many items have `available == 1`.
+
+**`avg_price = sum(prices) / len(prices) if prices else 0`** — the `if prices else 0`
+part prevents a division-by-zero error if the menu is completely empty.
 
 ---
 
-### 5f — Entry Point
+### 5h — The Entry Point
+
+At the very bottom of `app.py`:
 
 ```python
 if __name__ == "__main__":
@@ -432,27 +802,78 @@ if __name__ == "__main__":
     app.run(debug=True)
 ```
 
-`if __name__ == "__main__"` — This block only runs when you execute `python app.py`
-directly. It won't run when the file is imported by tests or other modules.
+**`if __name__ == "__main__":`** — this block only runs when you execute `python app.py`
+directly in the terminal. When pytest imports `app.py` to run tests, `__name__` is not
+`"__main__"`, so this block is skipped. This is standard Python practice for separating
+"run this file directly" from "import this file."
 
-`init_db()` — Creates the database and seeds sample data if it doesn't exist yet.
+**`init_db()`** — creates the database and seeds sample data on first run.
 
-`debug=True` — In debug mode, Flask automatically reloads when you save a file, and
-shows detailed error pages. Never use this in production.
+**`app.run(debug=True)`** — starts the Flask development server.
+`debug=True` enables two things:
+1. The server automatically restarts when you save a file — no need to stop and restart manually.
+2. If there's an error, Flask shows you a detailed error page in the browser instead of a plain 500 page.
+
+Never deploy with `debug=True`. It exposes your code and allows remote code execution.
+
 
 ---
 
 ## Step 6 — Create the HTML Templates
 
-Flask uses **Jinja2** to combine HTML with Python data. The `{{ variable }}` syntax
-outputs a variable. The `{% for %}` and `{% if %}` syntax runs logic.
+Flask uses a templating engine called **Jinja2** to combine HTML with Python data.
+All template files go in the `templates/` folder.
 
-### 6a — Base Template (`templates/base.html`)
+### How Jinja2 syntax works
+
+Before looking at the files, here are the three Jinja2 patterns used throughout:
+
+**Output a variable:**
+```html
+{{ item.name }}
+```
+Double curly braces print a variable's value into the HTML.
+
+**Run logic (if/for):**
+```html
+{% if item.available %}
+    <span>Available</span>
+{% else %}
+    <span>Unavailable</span>
+{% endif %}
+
+{% for item in items %}
+    <tr><td>{{ item.name }}</td></tr>
+{% endfor %}
+```
+Curly brace + percent sign runs Python-style logic. Every `{% if %}` needs `{% endif %}`,
+every `{% for %}` needs `{% endfor %}`.
+
+**Template inheritance:**
+```html
+{% extends "base.html" %}
+{% block content %}
+    ... page content here ...
+{% endblock %}
+```
+Child templates "extend" a parent template and fill in named blocks. This is how every
+page shares the same nav bar and footer without repeating that HTML in every file.
+
+---
+
+### 6a — base.html (The Shared Layout)
+
+```bash
+touch templates/base.html
+code templates/base.html
+```
 
 ```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Restaurant Menu Manager{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
@@ -479,134 +900,488 @@ outputs a variable. The `{% for %}` and `{% if %}` syntax runs logic.
     </main>
 
     <footer>
-        <p>Restaurant Menu Manager — WGU Software Engineering Capstone</p>
+        <p>Restaurant Menu Manager &mdash; WGU Software Engineering Capstone</p>
     </footer>
 </body>
 </html>
 ```
 
-This is the shared layout every other page inherits. It has the nav bar, the flash
-message display, and a `{% block content %}` placeholder that child templates fill in.
+**`{% block title %}...{% endblock %}`** — defines a replaceable block. The default
+value is "Restaurant Menu Manager". Child templates override this to set a custom
+page title like "Add Item - Restaurant Menu Manager".
 
-**`{% block title %}`** — Child templates can override the page title by defining their
-own `{% block title %}` block.
+**`{{ url_for('static', filename='css/style.css') }}`** — generates the correct URL
+to your CSS file. Flask's `url_for('static', ...)` always produces the right path
+regardless of where your app is deployed. Never hardcode paths like `/static/css/style.css`.
 
-**`url_for('static', filename='css/style.css')`** — Generates the correct URL for your
-CSS file. Using `url_for` instead of hardcoding paths means it works regardless of
-where your app is deployed.
+**`{{ url_for('index') }}`** — generates the URL `"/"` by looking up the function
+named `index` in `app.py`. Same for `url_for('add_item')` → `"/add"`,
+`url_for('report')` → `"/report"`. If you change a route URL in `app.py`, every
+`url_for` using that function name updates automatically.
 
-**Flash messages** — `get_flashed_messages(with_categories=true)` retrieves any messages
-set by `flash()` in your routes. The `category` (success, danger) maps to CSS classes
-for green/red styling.
-
-### 6b — Other Templates
-
-Each of the other templates (`index.html`, `add.html`, `edit.html`, `report.html`)
-starts with:
-
+**The flash message block:**
 ```html
-{% extends "base.html" %}
-{% block content %}
-  ... page-specific HTML here ...
-{% endblock %}
+{% with messages = get_flashed_messages(with_categories=true) %}
 ```
+`get_flashed_messages` is a Jinja2 global function Flask provides. It retrieves any
+messages stored by `flash()` in your routes. `with_categories=true` means each message
+comes back as a `(category, message)` tuple, like `("success", "Item saved!")` or
+`("danger", "Name is required.")`. The category is used as a CSS class:
+`alert-success` → green, `alert-danger` → red.
 
-`{% extends "base.html" %}` tells Jinja2 to use `base.html` as the wrapper and inject
-this template's content into the `{% block content %}` section.
-
-**Key Jinja2 patterns used:**
-
-Looping over items:
-```html
-{% for item in items %}
-  <tr>
-    <td>{{ item.name }}</td>
-    <td>${{ "%.2f" | format(item.price) }}</td>
-  </tr>
-{% endfor %}
-```
-
-Conditional styling:
-```html
-{% if item.available %}
-  <span class="status-available">Available</span>
-{% else %}
-  <span class="status-unavailable">Unavailable</span>
-{% endif %}
-```
-
-Form that submits a POST request:
-```html
-<form action="{{ url_for('delete_item', item_id=item.id) }}" method="POST">
-    <button type="submit">Delete</button>
-</form>
-```
-
-Note: browsers only support GET and POST natively. Flask handles routing to the right
-function based on both the URL and the method.
+**`{% block content %}{% endblock %}`** — this empty block is the slot where each
+child template's content gets inserted.
 
 ---
 
-## Step 7 — Create the Stylesheet (`static/css/style.css`)
+### 6b — index.html (The Menu List Page)
 
-The CSS file handles all visual styling. Key sections:
+```bash
+touch templates/index.html
+code templates/index.html
+```
 
-**Layout:**
+```html
+{% extends "base.html" %}
+{% block title %}Menu - Restaurant Menu Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Menu Items</h1>
+    <a href="{{ url_for('add_item') }}" class="btn btn-primary">+ Add Item</a>
+</div>
+
+<div class="filter-bar">
+    <span>Filter by category:</span>
+    <a href="{{ url_for('index') }}" class="btn btn-sm {% if not selected_category %}btn-active{% endif %}">All</a>
+    {% for cat in categories %}
+        <a href="{{ url_for('index', category=cat) }}"
+           class="btn btn-sm {% if selected_category == cat %}btn-active{% endif %}">
+            {{ cat }}
+        </a>
+    {% endfor %}
+</div>
+
+{% if items %}
+<table>
+    <thead>
+        <tr>
+            <th>Name</th><th>Category</th><th>Description</th>
+            <th>Price</th><th>Status</th><th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr class="{% if not item.available %}row-unavailable{% endif %}">
+            <td><strong>{{ item.name }}</strong></td>
+            <td><span class="badge badge-{{ item.category | lower }}">{{ item.category }}</span></td>
+            <td>{{ item.description or "—" }}</td>
+            <td>${{ "%.2f" | format(item.price) }}</td>
+            <td>
+                {% if item.available %}
+                    <span class="status-available">Available</span>
+                {% else %}
+                    <span class="status-unavailable">Unavailable</span>
+                {% endif %}
+            </td>
+            <td class="actions">
+                <a href="{{ url_for('edit_item', item_id=item.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+
+                <form action="{{ url_for('toggle_availability', item_id=item.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-toggle">
+                        {% if item.available %}Disable{% else %}Enable{% endif %}
+                    </button>
+                </form>
+
+                <form action="{{ url_for('delete_item', item_id=item.id) }}" method="POST" style="display:inline;"
+                      onsubmit="return confirm('Delete {{ item.name }}? This cannot be undone.');">
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+    <p>No menu items found. <a href="{{ url_for('add_item') }}">Add the first one!</a></p>
+</div>
+{% endif %}
+{% endblock %}
+```
+
+**`url_for('index', category=cat)`** — passing extra keyword arguments to `url_for`
+adds them as query parameters. So `url_for('index', category='Main')` generates
+`/?category=Main`. That's how the filter buttons work.
+
+**`{% if not selected_category %}btn-active{% endif %}`** — conditionally adds the
+`btn-active` CSS class to highlight which filter button is currently selected.
+
+**`{{ item.category | lower }}`** — the `|` is a Jinja2 filter. `lower` converts the
+string to lowercase. So `"Appetizer"` becomes `"appetizer"`, making the CSS class
+`badge-appetizer` which matches the CSS rule `.badge-appetizer { background: purple; }`.
+
+**`{{ "%.2f" | format(item.price) }}`** — formats the price as a decimal with exactly
+two places. `9.9` becomes `"9.90"`.
+
+**`{{ item.description or "—" }}`** — if `description` is empty or `None`, shows a
+dash instead of a blank cell.
+
+**Why delete uses a `<form>` not an `<a>` tag:** Browsers only send POST requests via
+forms. Using `<a href="/delete/1">` would be a GET request, which is wrong for a
+destructive action. The `onsubmit="return confirm(...)"` shows a browser confirmation
+dialog before the form actually submits.
+
+---
+
+### 6c — add.html (The Add Form)
+
+```bash
+touch templates/add.html
+code templates/add.html
+```
+
+```html
+{% extends "base.html" %}
+{% block title %}Add Item - Restaurant Menu Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Add Menu Item</h1>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">← Back to Menu</a>
+</div>
+
+<div class="form-container">
+    <form method="POST" action="{{ url_for('add_item') }}">
+
+        <div class="form-group">
+            <label for="name">Item Name *</label>
+            <input type="text" id="name" name="name"
+                   value="{{ form_data.get('name', '') }}"
+                   placeholder="e.g. Cheeseburger" required>
+        </div>
+
+        <div class="form-group">
+            <label for="category">Category *</label>
+            <select id="category" name="category" required>
+                <option value="">-- Select Category --</option>
+                {% for cat in categories %}
+                    <option value="{{ cat }}"
+                        {% if form_data.get('category') == cat %}selected{% endif %}>
+                        {{ cat }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description"
+                      placeholder="Brief description of the item...">{{ form_data.get('description', '') }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="price">Price ($) *</label>
+            <input type="number" id="price" name="price"
+                   value="{{ form_data.get('price', '') }}"
+                   step="0.01" min="0" placeholder="0.00" required>
+        </div>
+
+        <div class="form-group form-check">
+            <input type="checkbox" id="available" name="available"
+                   {% if form_data.get('available', True) %}checked{% endif %}>
+            <label for="available">Available on menu</label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Add Item</button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+
+    </form>
+</div>
+{% endblock %}
+```
+
+**`value="{{ form_data.get('name', '') }}"`** — if validation failed and the form was
+re-rendered, `form_data` contains what the user previously typed. This re-fills the
+input so they don't have to type it all again. On the first visit, `form_data` is `{}`
+(empty dict), so `.get('name', '')` returns an empty string.
+
+**`{% if form_data.get('category') == cat %}selected{% endif %}`** — re-selects the
+dropdown option the user had chosen before the validation error.
+
+**`step="0.01" min="0"`** — HTML attributes on the price input. `step="0.01"` allows
+decimal values. `min="0"` prevents negative numbers at the browser level (your Python
+validation is the real enforcement, but this gives immediate feedback).
+
+---
+
+### 6d — edit.html (The Edit Form)
+
+```bash
+touch templates/edit.html
+code templates/edit.html
+```
+
+This is almost identical to `add.html`, but instead of reading from `form_data`,
+it reads directly from the `item` object loaded from the database:
+
+```html
+<input type="text" id="name" name="name" value="{{ item.name }}" required>
+```
+
+And the form submits to the edit route with the item's id:
+```html
+<form method="POST" action="{{ url_for('edit_item', item_id=item.id) }}">
+```
+
+---
+
+### 6e — report.html (The Report Page)
+
+```bash
+touch templates/report.html
+code templates/report.html
+```
+
+```html
+{% extends "base.html" %}
+{% block title %}Menu Report - Restaurant Menu Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Menu Report</h1>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">← Back to Menu</a>
+</div>
+
+<div class="report-summary">
+    <div class="stat-card">
+        <div class="stat-number">{{ total_items }}</div>
+        <div class="stat-label">Total Items</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ total_available }}</div>
+        <div class="stat-label">Available</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ total_items - total_available }}</div>
+        <div class="stat-label">Unavailable</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">${{ "%.2f" | format(avg_price) }}</div>
+        <div class="stat-label">Avg Price</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">${{ "%.2f" | format(min_price) }}</div>
+        <div class="stat-label">Lowest Price</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">${{ "%.2f" | format(max_price) }}</div>
+        <div class="stat-label">Highest Price</div>
+    </div>
+</div>
+
+{% for category, data in report_data.items() %}
+<div class="report-section">
+    <h2>{{ category }}
+        <span class="category-count">({{ data.total }} items, {{ data.available }} available)</span>
+    </h2>
+    <table>
+        <thead>
+            <tr><th>Name</th><th>Description</th><th>Price</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+            {% for item in data.menu_items %}
+            <tr class="{% if not item.available %}row-unavailable{% endif %}">
+                <td><strong>{{ item.name }}</strong></td>
+                <td>{{ item.description or "—" }}</td>
+                <td>${{ "%.2f" | format(item.price) }}</td>
+                <td>
+                    {% if item.available %}
+                        <span class="status-available">Available</span>
+                    {% else %}
+                        <span class="status-unavailable">Unavailable</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endfor %}
+{% endblock %}
+```
+
+**`{% for category, data in report_data.items() %}`** — `.items()` on a Python dict
+returns key-value pairs. Here `category` gets the string like `"Main"` and `data` gets
+the dictionary of items/totals for that category.
+
+**`{{ total_items - total_available }}`** — you can do math directly inside `{{ }}`.
+
+
+---
+
+## Step 7 — Create the Stylesheet
+
+```bash
+touch static/css/style.css
+code static/css/style.css
+```
+
+The CSS controls every visual aspect of the app. Key sections explained:
+
+**Reset and base:**
 ```css
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: #f5f5f5;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
 }
 ```
-`-apple-system` uses the system font on Mac/iOS, `BlinkMacSystemFont` on Chrome/Mac,
-and falls back to `Segoe UI` (Windows) then `Roboto` (Android/Linux). This means the
-app looks native on every platform without loading a font file.
+`box-sizing: border-box` makes sizing predictable — padding and borders are included
+in element dimensions instead of added on top of them.
 
-**Buttons:**
+The font stack `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif` uses
+the operating system's default font on every platform: San Francisco on Mac/iOS,
+Segoe UI on Windows, Roboto on Android. No font file download needed.
+
+`display: flex; flex-direction: column` on the body lets the footer stick to the bottom
+of the page even when there isn't much content.
+
+**Buttons — base class plus modifiers:**
 ```css
-.btn { display: inline-block; padding: 0.5rem 1rem; border-radius: 5px; ... }
+.btn {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+.btn:hover { opacity: 0.85; }
 .btn-primary   { background: #3498db; color: white; }
+.btn-secondary { background: #95a5a6; color: white; }
 .btn-danger    { background: #e74c3c; color: white; }
+.btn-toggle    { background: #f39c12; color: white; }
+.btn-sm        { padding: 0.3rem 0.7rem; font-size: 0.82rem; }
 ```
-A base `.btn` class with modifier classes like `.btn-primary` and `.btn-danger`.
-This pattern (called BEM-style) keeps styles composable — you stack classes instead
-of creating a new class for every variation.
+`.btn` defines the shared styles. `.btn-primary`, `.btn-danger`, etc. only define the
+color. In HTML you stack them: `class="btn btn-primary"` or `class="btn btn-sm btn-danger"`.
+This pattern means you never write the same border-radius or padding more than once.
 
 **Category badges:**
 ```css
+.badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 12px;
+         font-size: 0.78rem; font-weight: 600; color: white; }
 .badge-appetizer { background: #9b59b6; }
 .badge-main      { background: #e67e22; }
 .badge-dessert   { background: #e91e8c; }
 .badge-drink     { background: #1abc9c; }
 ```
-In the template, `{{ item.category | lower }}` converts "Appetizer" to "appetizer",
-so `badge-{{ item.category | lower }}` becomes `badge-appetizer`, matching the CSS class.
+In `index.html`, the template outputs `badge-{{ item.category | lower }}`. The `| lower`
+Jinja2 filter converts "Appetizer" → "appetizer", so the class becomes `badge-appetizer`
+which matches this CSS rule. This is how the colored category pills are generated
+dynamically without any JavaScript.
+
+**Alert colors:**
+```css
+.alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+.alert-danger  { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+```
+These match the category strings passed to `flash()` in `app.py`. `flash("...", "success")`
+produces `<div class="alert alert-success">` in the template, which triggers the green styling.
+
+**Report stat cards:**
+```css
+.report-summary { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.2rem 1.5rem;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    min-width: 120px;
+    flex: 1;
+}
+.stat-number { font-size: 1.8rem; font-weight: 700; color: #2c3e50; }
+.stat-label  { font-size: 0.8rem; color: #888; margin-top: 0.3rem; text-transform: uppercase; }
+```
+`display: flex` on `.report-summary` puts the cards side by side. `flex: 1` on each
+card makes them share space equally. `flex-wrap: wrap` lets them wrap to the next line
+on small screens.
+
+Copy the full CSS from `static/css/style.css` in the project.
 
 ---
 
-## Step 8 — Write Tests (`tests/test_app.py`)
+## Step 8 — Create the Tests
+
+```bash
+touch tests/test_app.py
+code tests/test_app.py
+```
+
+Also create an empty `__init__.py` so Python treats `tests/` as a package:
+```bash
+touch tests/__init__.py
+```
+
+Full test file:
 
 ```python
+"""
+tests/test_app.py - Unit and integration tests for Restaurant Menu Manager.
+"""
+
 import pytest
+import sys
 import os
 import tempfile
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
 import database
+
 
 @pytest.fixture
 def client():
+    """Set up a test Flask client with a temporary file-based database."""
     db_fd, db_path = tempfile.mkstemp(suffix=".db")
     os.close(db_fd)
+
+    original_path = database.DB_PATH
     database.DB_PATH = db_path
 
     from app import app as flask_app
     flask_app.config["TESTING"] = True
+    flask_app.config["SECRET_KEY"] = "test-secret"
 
     conn = database.get_connection()
-    conn.execute("""CREATE TABLE IF NOT EXISTS menu_items (...)""")
-    conn.execute("INSERT INTO menu_items ... VALUES (?, ...)", ("Test Burger", ...))
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS menu_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            category TEXT NOT NULL,
+            description TEXT,
+            price REAL NOT NULL,
+            available INTEGER NOT NULL DEFAULT 1
+        )
+    """)
+    conn.execute(
+        "INSERT INTO menu_items (name, category, description, price, available) VALUES (?, ?, ?, ?, ?)",
+        ("Test Burger", "Main", "A test burger", 9.99, 1)
+    )
+    conn.execute(
+        "INSERT INTO menu_items (name, category, description, price, available) VALUES (?, ?, ?, ?, ?)",
+        ("Test Salad", "Appetizer", "A test salad", 6.49, 0)
+    )
     conn.commit()
     conn.close()
 
@@ -615,148 +1390,324 @@ def client():
 
     database.DB_PATH = original_path
     os.unlink(db_path)
-```
 
-**What is a fixture?**
-A pytest fixture is a function that sets something up before a test and tears it down
-after. The `yield` is the handoff point — code before `yield` is setup, code after is
-teardown.
 
-**Why a temp file database instead of `:memory:`?**
-SQLite's `:memory:` database lives inside a single connection. When your app opens a
-new connection (which it does for every request), it gets a brand new empty database.
-A temp file persists across connections while still being deleted after the test.
+def test_index_loads(client):
+    response = client.get("/")
+    assert response.status_code == 200
+    assert b"Test Burger" in response.data
 
-**`flask_app.config["TESTING"] = True`** — Puts Flask into test mode, which disables
-error catching so test failures show real exceptions instead of generic HTTP 500 errors.
+def test_index_category_filter(client):
+    response = client.get("/?category=Main")
+    assert response.status_code == 200
+    assert b"Test Burger" in response.data
+    assert b"Test Salad" not in response.data
 
-**Example test:**
-```python
+def test_add_item_get(client):
+    response = client.get("/add")
+    assert response.status_code == 200
+    assert b"Add Menu Item" in response.data
+
 def test_add_item_post_valid(client):
     response = client.post("/add", data={
-        "name": "New Pizza",
-        "category": "Main",
-        "price": "11.99",
-        "available": "on"
+        "name": "New Pizza", "category": "Main",
+        "description": "Cheese pizza", "price": "11.99", "available": "on"
     }, follow_redirects=True)
     assert response.status_code == 200
     assert b"New Pizza" in response.data
+
+def test_add_item_post_missing_name(client):
+    response = client.post("/add", data={
+        "name": "", "category": "Main", "price": "9.99"
+    }, follow_redirects=True)
+    assert b"Name is required" in response.data
+
+def test_add_item_post_invalid_price(client):
+    response = client.post("/add", data={
+        "name": "Bad Item", "category": "Main", "price": "not-a-price"
+    }, follow_redirects=True)
+    assert b"valid number" in response.data
+
+def test_edit_item_get(client):
+    response = client.get("/edit/1")
+    assert response.status_code == 200
+    assert b"Test Burger" in response.data
+
+def test_edit_item_post_valid(client):
+    response = client.post("/edit/1", data={
+        "name": "Updated Burger", "category": "Main",
+        "description": "Updated", "price": "12.99", "available": "on"
+    }, follow_redirects=True)
+    assert b"Updated Burger" in response.data
+
+def test_edit_item_not_found(client):
+    response = client.get("/edit/9999", follow_redirects=True)
+    assert b"not found" in response.data
+
+def test_delete_item(client):
+    response = client.post("/delete/1", follow_redirects=True)
+    assert b"deleted" in response.data
+    assert b"A test burger" not in response.data
+
+def test_delete_nonexistent_item(client):
+    response = client.post("/delete/9999", follow_redirects=True)
+    assert b"not found" in response.data
+
+def test_toggle_availability(client):
+    response = client.post("/toggle/1", follow_redirects=True)
+    assert b"unavailable" in response.data
+
+def test_report_loads(client):
+    response = client.get("/report")
+    assert response.status_code == 200
+    assert b"Menu Report" in response.data
+    assert b"Total Items" in response.data
 ```
 
-`client.post()` simulates submitting a form.
-`follow_redirects=True` tells the test client to follow any redirects automatically.
-`response.data` is the raw HTML bytes of the response.
-`b"New Pizza"` — the `b` prefix makes it a bytes literal, which is how Flask returns
-HTML.
+### What every part of the test file does
+
+**`sys.path.insert(0, ...)`** — adds the project root to Python's module search path
+so the test file can `import database` and `from app import app` even though the test
+file lives in a subdirectory.
+
+**The `@pytest.fixture` decorator:**
+A fixture is a function that sets up state before tests and tears it down after.
+Any test function that lists `client` as a parameter automatically gets the test
+client created by this fixture. pytest handles the setup and teardown automatically.
+
+**Why a temp file instead of `:memory:`:**
+SQLite's in-memory database (`:memory:`) only exists inside the connection that created it.
+When your Flask app opens a new connection to handle a request, it would get a completely
+fresh, empty database — not the one the fixture set up. By using a temp file
+(`tempfile.mkstemp()`), all connections within the test share the same database file.
+
+`tempfile.mkstemp()` returns two things: a file descriptor (`db_fd`) and the file path
+(`db_path`). We immediately close the file descriptor with `os.close(db_fd)` because
+SQLite will manage the file itself.
+
+**`database.DB_PATH = db_path`** — redirects the database module to use the temp file
+instead of the real `menu.db`. We save the original path first and restore it after
+the test so other tests aren't affected.
+
+**`yield test_client`** — the `yield` is the handoff to the test. Everything before
+`yield` is setup. The test runs. Everything after `yield` is teardown — we restore the
+original DB path and delete the temp file with `os.unlink(db_path)`.
+
+**`follow_redirects=True`** — after a successful add/edit/delete, the app redirects
+to the homepage. This option tells the test client to follow that redirect automatically
+so the final response is the homepage, not a 302 redirect response.
+
+**`response.data`** — the raw HTML bytes of the response. Note the `b""` prefix on
+strings in assertions — `b"Test Burger"` is a bytes literal, because `response.data`
+is bytes, not a regular string.
 
 ---
 
 ## Step 9 — Run the App
 
+Make sure your virtual environment is active (you should see `(venv)` in the prompt):
 ```bash
-source venv/bin/activate   # if not already active
+source venv/bin/activate
+```
+
+Start the app:
+```bash
 python app.py
 ```
 
-Open your browser to **http://127.0.0.1:5000**
-
-Flask will print something like:
+You will see output like:
 ```
+2026-08-17 11:00:00 [INFO] Starting Restaurant Menu Manager...
  * Running on http://127.0.0.1:5000
  * Debug mode: on
 ```
 
-To stop the server, press `Ctrl+C`.
+Open your browser and go to: **http://127.0.0.1:5000**
+
+You should see the menu with the 10 sample items.
+
+To stop the server: press `Control + C` in Terminal.
 
 ---
 
 ## Step 10 — Run the Tests
 
+With the virtual environment active:
 ```bash
 python -m pytest tests/ -v
 ```
 
-The `-v` flag shows each test name and whether it passed or failed. You should see
-13 passed.
+- `-v` means "verbose" — shows each test name and its result
+- You should see `13 passed`
+
+If any test fails, pytest shows exactly which assertion failed and what the actual
+value was. Read the error message carefully — it usually tells you exactly what is wrong.
+
+To run a single test:
+```bash
+python -m pytest tests/test_app.py::test_index_loads -v
+```
 
 ---
 
-## Step 11 — Push to GitHub
+## Step 11 — Create .gitignore
+
+Before pushing to GitHub, tell git to ignore files that shouldn't be committed:
 
 ```bash
-# Initialize git in the project folder
+touch .gitignore
+code .gitignore
+```
+
+Add these lines:
+```
+venv/
+__pycache__/
+*.pyc
+*.db
+.env
+.DS_Store
+```
+
+- `venv/` — thousands of package files, should never be in version control
+- `__pycache__/` — Python's compiled bytecode cache, auto-generated
+- `*.pyc` — compiled Python files
+- `*.db` — the SQLite database file. Each environment has its own database.
+- `.env` — environment variables file (secrets, API keys — never commit these)
+- `.DS_Store` — macOS folder metadata files, irrelevant to the project
+
+---
+
+## Step 12 — Push to GitHub
+
+First, authenticate the GitHub CLI if you haven't:
+```bash
+gh auth login
+```
+Follow the prompts — choose GitHub.com, HTTPS, and log in with your browser.
+
+Then initialize git, commit, and create the repo:
+```bash
 git init
-
-# Create a .gitignore so venv and the database file don't get committed
-echo "venv/\n__pycache__/\n*.db\n*.pyc\n.DS_Store" > .gitignore
-
-# Stage all files
-git add .
-
-# Make your first commit
-git commit -m "feat: initial Restaurant Menu Manager"
-
-# Create the repo on GitHub and push (requires GitHub CLI)
-gh repo create "your-repo-name" --public --source . --push
 ```
+Initializes a git repository in the current folder. Creates a hidden `.git/` folder.
 
-If you don't have the GitHub CLI, go to github.com, create a new repository manually,
-then run:
 ```bash
-git remote add origin https://github.com/YOUR_USERNAME/your-repo-name.git
-git push -u origin main
+git add .
+```
+Stages all files for commit. The `.` means "everything in this folder" (respecting
+`.gitignore`, so `venv/` and `*.db` are excluded).
+
+```bash
+git status
+```
+Shows what is staged. Run this before committing to confirm only the right files are included.
+
+```bash
+git commit -m "feat: initial Restaurant Menu Manager app"
+```
+Creates the first commit. The `-m` flag sets the commit message. Use a clear, descriptive
+message. The `feat:` prefix follows conventional commits format — common in professional
+development.
+
+```bash
+gh repo create "your-repo-name" --public --description "Your description here" --source . --push
+```
+- Creates the GitHub repository
+- `--public` makes it visible on your profile
+- `--source .` uses the current folder
+- `--push` pushes your commit to GitHub immediately
+
+After it runs, it prints the repository URL. Open it in your browser to confirm everything
+is there.
+
+For future changes, the workflow is:
+```bash
+git add .
+git commit -m "description of what you changed"
+git push
 ```
 
 ---
 
-## Full File List
+## Complete File Structure
+
+After all steps, your project looks like this:
 
 ```
 restaurant-menu/
-├── app.py                  ← Flask app and all routes
-├── database.py             ← Database connection and initialization
-├── requirements.txt        ← Python packages
-├── README.md               ← Project overview
-├── HOW_TO_BUILD.md         ← This file
-├── .gitignore              ← Files git should ignore
+├── .gitignore
+├── README.md
+├── HOW_TO_BUILD.md
+├── app.py
+├── database.py
+├── requirements.txt
+├── menu.db              ← created automatically on first run (not in git)
 ├── templates/
-│   ├── base.html           ← Shared layout (nav, flash messages, footer)
-│   ├── index.html          ← Menu list page
-│   ├── add.html            ← Add item form
-│   ├── edit.html           ← Edit item form
-│   └── report.html         ← Report summary page
+│   ├── base.html
+│   ├── index.html
+│   ├── add.html
+│   ├── edit.html
+│   └── report.html
 ├── static/
 │   └── css/
-│       └── style.css       ← All styling
-└── tests/
-    └── test_app.py         ← 13 pytest tests
+│       └── style.css
+├── tests/
+│   ├── __init__.py
+│   └── test_app.py
+└── venv/                ← created by python3 -m venv venv (not in git)
 ```
 
 ---
 
-## Common Errors and Fixes
+## Common Errors and How to Fix Them
+
+**`(venv)` is not showing in the prompt**
+You forgot to activate the virtual environment. Run:
+```bash
+source venv/bin/activate
+```
 
 **`ModuleNotFoundError: No module named 'flask'`**
-You're not in the virtual environment. Run `source venv/bin/activate` first.
+Same cause — virtual environment not active. Run the command above.
 
-**`Address already in use`**
-Something else is running on port 5000. Either stop that process or run Flask on a
-different port: `app.run(debug=True, port=5001)`
+**`Address already in use` when starting the app**
+Port 5000 is already being used. Either stop the other process, or run Flask on a
+different port:
+```bash
+flask run --port 5001
+```
+Then visit `http://127.0.0.1:5001`.
 
-**`TemplateNotFoundError`**
-Flask can't find your HTML file. Make sure the file is inside the `templates/` folder
-and the name matches exactly (case sensitive).
+**`TemplateNotFoundError: index.html`**
+Flask can't find your HTML file. Check:
+1. The file is in `templates/` (not `template/` or any other name)
+2. The filename matches exactly — `index.html` not `Index.html`
 
-**`sqlite3.OperationalError: no such table`**
-The database hasn't been initialized. Make sure `init_db()` is called before the app
-handles requests. It's called in the `if __name__ == "__main__"` block in `app.py`.
+**`sqlite3.OperationalError: no such table: menu_items`**
+The database was never initialized. This usually means `init_db()` didn't run.
+You can run it manually:
+```bash
+python database.py
+```
+
+**`jinja2.exceptions.UndefinedError: 'X' is undefined`**
+The template is trying to use a variable that wasn't passed to `render_template()`.
+Check that your route passes all the variables the template expects.
+
+**Tests fail with `no such table`**
+The test fixture didn't create the schema. Make sure the `CREATE TABLE` SQL is in the
+fixture before the `INSERT` statements.
 
 ---
 
-## What to Add Next (for the Real Capstone)
+## What to Add Next
 
-1. **User authentication** — Login page so not just anyone can edit the menu
-2. **PDF report export** — Use the `reportlab` or `weasyprint` library
-3. **Image uploads** — Let users attach a photo to each menu item
-4. **Deploy to AWS Elastic Beanstalk** — Follow the videos linked in the capstone tips
-5. **Custom domain via Route 53** — Register a `.com` and point it at your app
+Once you are comfortable with this project, here are the natural next steps for the capstone:
+
+1. **User login** — add Flask-Login so only authenticated users can edit the menu
+2. **PDF report** — use the `reportlab` library to export the report as a downloadable PDF
+3. **Image uploads** — let users attach a photo to each item, stored in `static/uploads/`
+4. **Deploy to AWS Elastic Beanstalk** — follow the video linked in the capstone tips
+5. **Custom domain via Route 53** — register a `.com` and point it at your deployed app
+6. **Environment variables** — move the secret key to a `.env` file using `python-dotenv`
