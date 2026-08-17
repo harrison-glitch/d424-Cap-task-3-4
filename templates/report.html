@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Menu Report - Restaurant Menu Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Menu Report</h1>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">← Back to Menu</a>
+</div>
+
+<!-- Overall summary -->
+<div class="report-summary">
+    <div class="stat-card">
+        <div class="stat-number">{{ total_items }}</div>
+        <div class="stat-label">Total Items</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ total_available }}</div>
+        <div class="stat-label">Available</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ total_items - total_available }}</div>
+        <div class="stat-label">Unavailable</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">${{ "%.2f" | format(avg_price) }}</div>
+        <div class="stat-label">Avg Price</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">${{ "%.2f" | format(min_price) }}</div>
+        <div class="stat-label">Lowest Price</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">${{ "%.2f" | format(max_price) }}</div>
+        <div class="stat-label">Highest Price</div>
+    </div>
+</div>
+
+<!-- Per-category breakdown -->
+{% for category, data in report_data.items() %}
+<div class="report-section">
+    <h2>{{ category }} <span class="category-count">({{ data.total }} items, {{ data.available }} available)</span></h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Price</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in data.menu_items %}
+            <tr class="{% if not item.available %}row-unavailable{% endif %}">
+                <td><strong>{{ item.name }}</strong></td>
+                <td>{{ item.description or "—" }}</td>
+                <td>${{ "%.2f" | format(item.price) }}</td>
+                <td>
+                    {% if item.available %}
+                        <span class="status-available">Available</span>
+                    {% else %}
+                        <span class="status-unavailable">Unavailable</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endfor %}
+{% endblock %}

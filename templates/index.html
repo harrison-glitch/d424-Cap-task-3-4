@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Menu - Restaurant Menu Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Menu Items</h1>
+    <a href="{{ url_for('add_item') }}" class="btn btn-primary">+ Add Item</a>
+</div>
+
+<!-- Category filter -->
+<div class="filter-bar">
+    <span>Filter by category:</span>
+    <a href="{{ url_for('index') }}" class="btn btn-sm {% if not selected_category %}btn-active{% endif %}">All</a>
+    {% for cat in categories %}
+        <a href="{{ url_for('index', category=cat) }}"
+           class="btn btn-sm {% if selected_category == cat %}btn-active{% endif %}">
+            {{ cat }}
+        </a>
+    {% endfor %}
+</div>
+
+<!-- Menu table -->
+{% if items %}
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr class="{% if not item.available %}row-unavailable{% endif %}">
+            <td><strong>{{ item.name }}</strong></td>
+            <td><span class="badge badge-{{ item.category | lower }}">{{ item.category }}</span></td>
+            <td>{{ item.description or "—" }}</td>
+            <td>${{ "%.2f" | format(item.price) }}</td>
+            <td>
+                {% if item.available %}
+                    <span class="status-available">Available</span>
+                {% else %}
+                    <span class="status-unavailable">Unavailable</span>
+                {% endif %}
+            </td>
+            <td class="actions">
+                <a href="{{ url_for('edit_item', item_id=item.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+
+                <form action="{{ url_for('toggle_availability', item_id=item.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-toggle">
+                        {% if item.available %}Disable{% else %}Enable{% endif %}
+                    </button>
+                </form>
+
+                <form action="{{ url_for('delete_item', item_id=item.id) }}" method="POST" style="display:inline;"
+                      onsubmit="return confirm('Delete {{ item.name }}? This cannot be undone.');">
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+    <p>No menu items found. <a href="{{ url_for('add_item') }}">Add the first one!</a></p>
+</div>
+{% endif %}
+{% endblock %}

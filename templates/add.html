@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Add Item - Restaurant Menu Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Add Menu Item</h1>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">← Back to Menu</a>
+</div>
+
+<div class="form-container">
+    <form method="POST" action="{{ url_for('add_item') }}">
+
+        <div class="form-group">
+            <label for="name">Item Name *</label>
+            <input type="text" id="name" name="name"
+                   value="{{ form_data.get('name', '') }}"
+                   placeholder="e.g. Cheeseburger" required>
+        </div>
+
+        <div class="form-group">
+            <label for="category">Category *</label>
+            <select id="category" name="category" required>
+                <option value="">-- Select Category --</option>
+                {% for cat in categories %}
+                    <option value="{{ cat }}"
+                        {% if form_data.get('category') == cat %}selected{% endif %}>
+                        {{ cat }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description"
+                      placeholder="Brief description of the item...">{{ form_data.get('description', '') }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="price">Price ($) *</label>
+            <input type="number" id="price" name="price"
+                   value="{{ form_data.get('price', '') }}"
+                   step="0.01" min="0" placeholder="0.00" required>
+        </div>
+
+        <div class="form-group form-check">
+            <input type="checkbox" id="available" name="available"
+                   {% if form_data.get('available', True) %}checked{% endif %}>
+            <label for="available">Available on menu</label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Add Item</button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+
+    </form>
+</div>
+{% endblock %}
